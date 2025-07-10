@@ -4,4 +4,4 @@
 
 Adds password reset form to adminforth login page.
 
-## For usage, see [AdminForth EmailPasswordReset Documentation](https://adminforth.dev/docs/tutorial/Plugins/EmailPasswordReset/)
+## For usage, see [AdminForth EmailPasswordReset Documentation](https://adminforth.dev/docs/tutorial/Plugins/email-password-reset/)
