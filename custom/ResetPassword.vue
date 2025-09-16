@@ -134,7 +134,7 @@
                       {{$t('Reset Password')}}
                     </Button>
                     <p class="text-gray-500 dark:text-gray-400 font-sm text-right mt-3">
-                      {{$t('or')}} <Link to="/login">{{$t('Back to login')}}</Link>
+                      <Link to="/login">{{$t('Back to login')}}</Link>
                     </p>
                   </form>
                 </div>
