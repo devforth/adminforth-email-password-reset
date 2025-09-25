@@ -291,5 +291,4 @@ async function setNewPassword() {
   }
 }
 
-
 </script>
