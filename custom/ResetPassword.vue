@@ -104,7 +104,7 @@
                     </Button>
                   </form>
 <!-- END of set new paasord -->
-                  <div v-if="!enteringNew && requestSent" class="flex items center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
+                  <div v-if="!enteringNew && requestSent" class="af-alert-success flex items-center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
                     {{$t('If user exists, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
                   </div>
 
