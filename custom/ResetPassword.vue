@@ -29,7 +29,7 @@
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 dark:shadow-black" >
                 <!-- Modal header -->
-                <div class="flex flex-col items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                   <component  
                     v-if="route.meta.pageInjection?.panelHeader" 
                     :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" 
@@ -105,7 +105,7 @@
                   </form>
 <!-- END of set new paasord -->
                   <div v-if="!enteringNew && requestSent" class="flex items center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
-                    {{$t('If user with specified email exists, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
+                    {{$t('If user exists, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
                   </div>
 
                   <form v-if="!enteringNew && !requestSent" class="space-y-4" @submit.prevent>
