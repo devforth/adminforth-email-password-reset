@@ -176,7 +176,6 @@ const passwordConfirmation = ref("");
 const unmasked = ref(false);
 const sentToEmail: Ref<string> = ref('');
 
-
 const route = useRoute();
 const router = useRouter();
 
