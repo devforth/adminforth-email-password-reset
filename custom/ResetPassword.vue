@@ -29,10 +29,14 @@
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 dark:shadow-black" >
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                      {{$t('Reset your password on')}} {{ coreStore.config?.brandName }}
-                    </h3>
+                <div class="flex flex-col items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                  <component  
+                    v-if="route.meta.pageInjection?.panelHeader" 
+                    :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" 
+                  />
+                  <h3 v-else class="text-xl font-semibold text-gray-900 dark:text-white">
+                    {{$t('Reset your password on')}} {{ coreStore.config?.brandName }}
+                  </h3>
                 </div>
                 <!-- Modal body -->
                 <div class="p-4 md:p-5">
@@ -69,7 +73,6 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
                         :placeholder="$t('Confirm new password')" required 
                       />
-
                       <button
                         type="button"
                         @click="unmasked = !unmasked"
@@ -115,6 +118,10 @@
                         placeholder="name@company.com" 
                         required
                       />
+                      <component  
+                        v-if="route.meta.pageInjection?.underInputs" 
+                        :is="getCustomComponent({file: route.meta.pageInjection?.underInputs})" 
+                      />
                     </div>
                   
                     <div v-if="error" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
@@ -156,6 +163,7 @@ import { IconEyeSolid, IconEyeSlashSolid } from '@iconify-prerendered/vue-flowbi
 import Button from '@/afcl/Button.vue';
 import Link from '@/afcl/Link.vue';
 import adminforth from '@/adminforth';
+import { getCustomComponent } from '@/utils';
 
 const inProgress = ref(false);
 
@@ -202,7 +210,6 @@ function checkPassowrd() {
 const validationRunning = ref(false);
 
 const validationError = computed(() => {
-  console.log('validationRunning.value', validationRunning.value, 'aa', checkPassowrd());
   if (validationRunning.value) {
     return checkPassowrd();
   }
