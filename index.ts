@@ -67,10 +67,17 @@ export default class EmailPasswordReset extends AdminForthPlugin {
             minLength: passwordField.minLength,
             maxLength: passwordField.maxLength,
             validation: passwordField.validation
-          }
+          },
+          pageInjection: this.options.pageInjection
         }
       }
     })
+    if (this.options.pageInjection?.panelHeader) {
+      adminforth.codeInjector.registerCustomComponent(this.options.pageInjection.panelHeader);
+    }
+    if (this.options.pageInjection?.underInputs) {
+      adminforth.codeInjector.registerCustomComponent(this.options.pageInjection.underInputs);
+    }
 
     // simply modify resourceConfig or adminforth.config. You can get access to plugin options via this.options;
   }

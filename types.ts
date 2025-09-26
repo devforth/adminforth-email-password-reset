@@ -22,4 +22,9 @@ export interface PluginOptions {
    * When user will enter passowrd, it will be validated against this field constraints
    */
   passwordField: string;
+
+  pageInjection?: {
+    panelHeader?: string;
+    underInputs?: string;
+  }
 }

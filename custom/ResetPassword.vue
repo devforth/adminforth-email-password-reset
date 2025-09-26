@@ -30,9 +30,13 @@
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 dark:shadow-black" >
                 <!-- Modal header -->
                 <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                      {{$t('Reset your password on')}} {{ coreStore.config?.brandName }}
-                    </h3>
+                  <component  
+                    v-if="route.meta.pageInjection?.panelHeader" 
+                    :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" 
+                  />
+                  <h3 v-else class="text-xl font-semibold text-gray-900 dark:text-white">
+                    {{$t('Reset your password on')}} {{ coreStore.config?.brandName }}
+                  </h3>
                 </div>
                 <!-- Modal body -->
                 <div class="p-4 md:p-5">
@@ -69,7 +73,6 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
                         :placeholder="$t('Confirm new password')" required 
                       />
-
                       <button
                         type="button"
                         @click="unmasked = !unmasked"
@@ -101,8 +104,8 @@
                     </Button>
                   </form>
 <!-- END of set new paasord -->
-                  <div v-if="!enteringNew && requestSent" class="af-alert-success flex items center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
-                    {{$t('If user with specified email exists in our db, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
+                  <div v-if="!enteringNew && requestSent" class="af-alert-success flex items-center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
+                    {{$t('If user exists, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
                   </div>
 
                   <form v-if="!enteringNew && !requestSent" class="space-y-4" @submit.prevent>
@@ -114,6 +117,10 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
                         placeholder="name@company.com" 
                         required
+                      />
+                      <component  
+                        v-if="route.meta.pageInjection?.underInputs" 
+                        :is="getCustomComponent({file: route.meta.pageInjection?.underInputs})" 
                       />
                     </div>
                   
@@ -156,6 +163,7 @@ import { IconEyeSolid, IconEyeSlashSolid } from '@iconify-prerendered/vue-flowbi
 import Button from '@/afcl/Button.vue';
 import Link from '@/afcl/Link.vue';
 import adminforth from '@/adminforth';
+import { getCustomComponent } from '@/utils';
 
 const inProgress = ref(false);
 
@@ -167,7 +175,6 @@ const password = ref("");
 const passwordConfirmation = ref("");
 const unmasked = ref(false);
 const sentToEmail: Ref<string> = ref('');
-
 
 const route = useRoute();
 const router = useRouter();
@@ -199,10 +206,10 @@ function checkPassowrd() {
   return null;
 }
 
+
 const validationRunning = ref(false);
 
 const validationError = computed(() => {
-  console.log('validationRunning.value', validationRunning.value, 'aa', checkPassowrd());
   if (validationRunning.value) {
     return checkPassowrd();
   }
@@ -284,6 +291,5 @@ async function setNewPassword() {
 
   }
 }
-
 
 </script>
