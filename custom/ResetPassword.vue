@@ -43,14 +43,14 @@
                   <form v-if="enteringNew" class="space-y-4" role="alert" @submit.prevent>
                     <div class="relative">
                       <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('New password')}}</label>
-                      <input 
+                      <Input 
                         :type="unmasked ? 'text' : 'password'"
                         name="password" id="password"
                         autocomplete="new-password"
                         v-model="password"
                         @keydown.enter="passwordConfirmationInput.focus()"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
-                        :placeholder="$t('New password')" required 
+                        class="w-full"
+                        :placeholder="$t('New password')" required
                       />
                       
                       <button
@@ -65,12 +65,12 @@
 
                     <div class="relative">
                       <label for="password_confirmation" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('Confirm new password')}}</label>
-                      <input 
+                      <Input 
                         :type="unmasked ? 'text' : 'password'"
                         name="password_confirmation" id="password_confirmation" 
                         autocomplete="new-password"
                         v-model="passwordConfirmation"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
+                        class="w-full" 
                         :placeholder="$t('Confirm new password')" required 
                       />
                       <button
@@ -111,10 +111,10 @@
                   <form v-if="!enteringNew && !requestSent" class="space-y-4" @submit.prevent>
                     <div>
                       <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('Your email')}}</label>
-                      <input type="email" name="email" id="email" 
+                      <Input type="email" name="email" id="email" 
                         @keydown.enter="reset()"
                         ref="emailInput"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" 
+                        class="w-full" 
                         placeholder="name@company.com" 
                         required
                       />
@@ -160,8 +160,7 @@ import { useCoreStore } from '@/stores/core';
 import { callAdminForthApi, loadFile, applyRegexValidation } from '@/utils';
 import { useRoute, useRouter } from 'vue-router';
 import { IconEyeSolid, IconEyeSlashSolid } from '@iconify-prerendered/vue-flowbite';
-import Button from '@/afcl/Button.vue';
-import Link from '@/afcl/Link.vue';
+import { Link, Button, Input } from '@/afcl';
 import adminforth from '@/adminforth';
 import { getCustomComponent } from '@/utils';
 
