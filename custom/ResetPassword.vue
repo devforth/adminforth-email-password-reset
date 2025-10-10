@@ -113,7 +113,7 @@
                       <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('Your email')}}</label>
                       <Input type="email" name="email" id="email" 
                         @keydown.enter="reset()"
-                        ref="emailInput"
+                        v-model="emailInput"
                         class="w-full" 
                         placeholder="name@company.com" 
                         required
@@ -234,7 +234,7 @@ onMounted(async () => {
 
 async function reset() {
   error.value = null;
-  const email = emailInput.value.value;
+  const email = emailInput.value;
   if (!email) {
     error.value = 'Please enter your email';
     return;
