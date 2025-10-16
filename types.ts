@@ -27,4 +27,8 @@ export interface PluginOptions {
     panelHeader?: string;
     underInputs?: string;
   }
+  /**
+   * Signup component order under login button
+   */
+  loginPageComponentOrder?: number;
 }

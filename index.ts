@@ -53,8 +53,8 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     }
 
 
-    adminforth.config.customization.loginPageInjections.underInputs.push({ 
-      file: this.componentPath('ResetPasswordUnderLogin.vue') }
+    (adminforth.config.customization.loginPageInjections.underLoginButton as Array<any>).push({ 
+      file: this.componentPath('ResetPasswordUnderLogin.vue'), meta: { afOrder: this.options.loginPageComponentOrder || 0} }
     );
     adminforth.config.customization.customPages.push({
       path:'/reset-password',
@@ -75,8 +75,8 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     if (this.options.pageInjection?.panelHeader) {
       adminforth.codeInjector.registerCustomComponent(this.options.pageInjection.panelHeader);
     }
-    if (this.options.pageInjection?.underInputs) {
-      adminforth.codeInjector.registerCustomComponent(this.options.pageInjection.underInputs);
+    if ((this.options.pageInjection as any)?.underLoginButton) {
+      adminforth.codeInjector.registerCustomComponent((this.options.pageInjection as any).underLoginButton);
     }
 
     // simply modify resourceConfig or adminforth.config. You can get access to plugin options via this.options;
