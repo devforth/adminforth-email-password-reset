@@ -61,7 +61,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       component: { 
         file: this.componentPath('ResetPassword.vue'), 
         meta: { 
-          customLayout: true, 
+          sidebarAndHeader: "none", 
           pluginInstanceId: this.pluginInstanceId,
           passwordField: {
             minLength: passwordField.minLength,
