@@ -13,10 +13,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
   constructor(options: PluginOptions) {
     super(options, import.meta.url);
     this.options = options;
-  }
-
-  shouldHaveSingleInstancePerWholeApp(): boolean {
-    return true;
+    this.shouldHaveSingleInstancePerWholeApp = () => true;
   }
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
