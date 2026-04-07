@@ -20,7 +20,7 @@
     "password reset"
   ],
   "author": "devforth",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Email password reset plugin for adminforth",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.654.0",
