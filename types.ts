@@ -1,6 +1,6 @@
-import type { EmailAdapter } from "adminforth";
+import type { EmailAdapter, PluginsCommonOptions } from "adminforth";
 
-export interface PluginOptions {
+export interface PluginOptions extends PluginsCommonOptions{
   /**
    * Field name in auth resource which contains email
    */
