@@ -19,7 +19,7 @@
     "adminforth",
     "password reset"
   ],
-  "author": "devforth",
+  "author": "DevForth (https://devforth.io)",
   "license": "MIT",
   "description": "Email password reset plugin for adminforth",
   "dependencies": {
