@@ -35,5 +35,5 @@ export interface PluginOptions extends PluginsCommonOptions{
   /**
    * KeyValueAdapter stores used password reset tokens to prevent reuse.
    */
-  usedResetTokensKeyValueAdapter: KeyValueAdapter;
+  userResetTokensKeyValueAdapter: KeyValueAdapter;
 }
