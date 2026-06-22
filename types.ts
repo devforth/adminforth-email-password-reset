@@ -1,4 +1,4 @@
-import type { EmailAdapter, PluginsCommonOptions } from "adminforth";
+import type { EmailAdapter, PluginsCommonOptions, KeyValueAdapter } from "adminforth";
 
 export interface PluginOptions extends PluginsCommonOptions{
   /**
@@ -31,4 +31,9 @@ export interface PluginOptions extends PluginsCommonOptions{
    * Signup component order under login button
    */
   loginPageComponentOrder?: number;
+
+  /**
+   * KeyValueAdapter stores used password reset tokens to prevent reuse.
+   */
+  usedResetTokensKeyValueAdapter: KeyValueAdapter;
 }
