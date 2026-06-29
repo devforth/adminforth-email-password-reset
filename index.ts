@@ -104,7 +104,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         const { email, url } = body;
 
         // validate email
-        if (!validator.isEmail(email)) {
+        if (!email || typeof email !== 'string' || !validator.isEmail(email)) {
           return { error: 'Invalid email address', ok: false };
         }
 
@@ -161,6 +161,9 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       noAuth: true,
       handler: async ({ body }) => {
         const { token, password } = body;
+        if (!token || !password) {
+          return { error: 'Invalid token', ok: false };
+        }
         console.log('token', token);
         const isUsed = await this.options.userResetTokensKeyValueAdapter.get(token);
         if (isUsed) {
