@@ -1,8 +1,19 @@
-import AdminForth, { AdminForthPlugin, Filters, suggestIfTypo } from "adminforth";
+import AdminForth, { AdminForthPlugin, parseBody, Filters, suggestIfTypo } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthComponentDeclaration, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import validator from 'validator';
+import { z } from "zod";
+
+const resetPasswordBodySchema = z.object({
+  email: z.string(),
+  url: z.string(),
+}).strict();
+
+const resetPasswordConfirmBodySchema = z.object({
+  token: z.string(),
+  password: z.string(),
+}).strict();
 
 export default class EmailPasswordReset extends AdminForthPlugin {
   options: PluginOptions;
@@ -100,8 +111,11 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { email, url } = body;
+      handler: async ({ body, response }) => {
+        const parsed = parseBody(resetPasswordBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
+        const { email, url } = data;
 
         // validate email
         if (!email || typeof email !== 'string' || !validator.isEmail(email)) {
@@ -159,8 +173,11 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password-confirm`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { token, password } = body;
+      handler: async ({ body, response }) => {
+        const parsed = parseBody(resetPasswordConfirmBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
+        const { token, password } = data;
         if (!token || !password) {
           return { error: 'Invalid token', ok: false };
         }
