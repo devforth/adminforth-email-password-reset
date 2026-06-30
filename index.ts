@@ -3,6 +3,17 @@ import type { IAdminForth, IHttpServer, AdminForthComponentDeclaration, AdminFor
 import type { PluginOptions } from './types.js';
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import validator from 'validator';
+import { z } from "zod";
+
+const resetPasswordBodySchema = z.object({
+  email: z.string(),
+  url: z.string(),
+}).strict();
+
+const resetPasswordConfirmBodySchema = z.object({
+  token: z.string(),
+  password: z.string(),
+}).strict();
 
 export default class EmailPasswordReset extends AdminForthPlugin {
   options: PluginOptions;
@@ -14,6 +25,19 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     super(options, import.meta.url);
     this.options = options;
     this.shouldHaveSingleInstancePerWholeApp = () => true;
+  }
+
+  private parseBody<T>(
+    schema: z.ZodType<T>,
+    body: unknown,
+    response: { setStatus: (code: number, message: string) => void },
+  ): T | null {
+    const parsed = schema.safeParse(body ?? {});
+    if (!parsed.success) {
+      response.setStatus(422, parsed.error.message);
+      return null;
+    }
+    return parsed.data;
   }
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
@@ -100,8 +124,10 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { email, url } = body;
+      handler: async ({ body, response }) => {
+        const data = this.parseBody(resetPasswordBodySchema, body, response);
+        if (!data) return;
+        const { email, url } = data;
 
         // validate email
         if (!email || typeof email !== 'string' || !validator.isEmail(email)) {
@@ -159,8 +185,10 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password-confirm`,
       noAuth: true,
-      handler: async ({ body }) => {
-        const { token, password } = body;
+      handler: async ({ body, response }) => {
+        const data = this.parseBody(resetPasswordConfirmBodySchema, body, response);
+        if (!data) return;
+        const { token, password } = data;
         if (!token || !password) {
           return { error: 'Invalid token', ok: false };
         }
