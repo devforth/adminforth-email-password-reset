@@ -1,4 +1,4 @@
-import AdminForth, { AdminForthPlugin, Filters, suggestIfTypo } from "adminforth";
+import AdminForth, { AdminForthPlugin, parseBody, Filters, suggestIfTypo } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthComponentDeclaration, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
@@ -25,22 +25,6 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     super(options, import.meta.url);
     this.options = options;
     this.shouldHaveSingleInstancePerWholeApp = () => true;
-  }
-
-  private parseBody<T>(
-    schema: z.ZodType<T>,
-    body: unknown,
-    response: { setStatus: (code: number, message: string) => void },
-  ): { ok: true; data: T } | { ok: false; error: { error: string; details: unknown } } {
-    const parsed = schema.safeParse(body ?? {});
-    if (!parsed.success) {
-      response.setStatus(400, '');
-      return {
-        ok: false,
-        error: { error: 'Request body validation failed', details: parsed.error.issues },
-      };
-    }
-    return { ok: true, data: parsed.data };
   }
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
@@ -128,7 +112,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       path: `/plugin/${this.pluginInstanceId}/reset-password`,
       noAuth: true,
       handler: async ({ body, response }) => {
-        const parsed = this.parseBody(resetPasswordBodySchema, body, response);
+        const parsed = parseBody(resetPasswordBodySchema, body, response);
         if ('error' in parsed) return parsed.error;
         const data = parsed.data;
         const { email, url } = data;
@@ -190,7 +174,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       path: `/plugin/${this.pluginInstanceId}/reset-password-confirm`,
       noAuth: true,
       handler: async ({ body, response }) => {
-        const parsed = this.parseBody(resetPasswordConfirmBodySchema, body, response);
+        const parsed = parseBody(resetPasswordConfirmBodySchema, body, response);
         if ('error' in parsed) return parsed.error;
         const data = parsed.data;
         const { token, password } = data;
