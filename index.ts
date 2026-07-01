@@ -1,4 +1,4 @@
-import AdminForth, { AdminForthPlugin, parseBody, Filters, suggestIfTypo } from "adminforth";
+import AdminForth, { AdminForthPlugin, Filters, suggestIfTypo } from "adminforth";
 import type { IAdminForth, IHttpServer, AdminForthComponentDeclaration, AdminForthResourceColumn, AdminForthDataTypes, AdminForthResource } from "adminforth";
 import type { PluginOptions } from './types.js';
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
@@ -111,10 +111,9 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password`,
       noAuth: true,
+      request_schema: resetPasswordBodySchema,
       handler: async ({ body, response }) => {
-        const parsed = parseBody(resetPasswordBodySchema, body, response);
-        if ('error' in parsed) return parsed.error;
-        const data = parsed.data;
+        const data = body as z.infer<typeof resetPasswordBodySchema>;
         const { email, url } = data;
 
         // validate email
@@ -173,14 +172,10 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password-confirm`,
       noAuth: true,
+      request_schema: resetPasswordConfirmBodySchema,
       handler: async ({ body, response }) => {
-        const parsed = parseBody(resetPasswordConfirmBodySchema, body, response);
-        if ('error' in parsed) return parsed.error;
-        const data = parsed.data;
+        const data = body as z.infer<typeof resetPasswordConfirmBodySchema>;
         const { token, password } = data;
-        if (!token || !password) {
-          return { error: 'Invalid token', ok: false };
-        }
         console.log('token', token);
         const isUsed = await this.options.userResetTokensKeyValueAdapter.get(token);
         if (isUsed) {
