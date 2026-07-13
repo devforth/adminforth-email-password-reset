@@ -36,4 +36,10 @@ export interface PluginOptions extends PluginsCommonOptions{
    * KeyValueAdapter stores used password reset tokens to prevent reuse.
    */
   userResetTokensKeyValueAdapter: KeyValueAdapter;
+
+  /**
+   * The origin(s) (scheme + host + optional port) of the admin panel that are
+   * allowed to appear in password reset links, e.g. "https://admin.example.com".
+   */
+  expectedOrigin: string | string[];
 }

@@ -98,6 +98,28 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     // optional method where you can safely check field types after database discovery was performed
 
     this.options.adapter.validate();
+
+    const rawOrigins = this.options.expectedOrigin;
+    const originList = Array.isArray(rawOrigins) ? rawOrigins : [rawOrigins];
+    if (!rawOrigins || originList.length === 0 || originList.some(o => !o)) {
+      throw new Error(
+        'EmailPasswordReset: expectedOrigin is required. Set it to the admin panel origin(s) ' +
+        '(e.g. "https://admin.example.com") so reset links can only point to a trusted host.'
+      );
+    }
+    for (const origin of originList) {
+      try {
+        new URL(origin);
+      } catch {
+        throw new Error(`EmailPasswordReset: expectedOrigin "${origin}" is not a valid absolute URL/origin.`);
+      }
+    }
+  }
+
+  getAllowedOrigins(): string[] {
+    const rawOrigins = this.options.expectedOrigin;
+    const originList = Array.isArray(rawOrigins) ? rawOrigins : [rawOrigins];
+    return originList.map(o => new URL(o).origin);
   }
 
   instanceUniqueRepresentation(pluginOptions: any) : string {
@@ -121,19 +143,35 @@ export default class EmailPasswordReset extends AdminForthPlugin {
           return { error: 'Invalid email address', ok: false };
         }
 
+        let resetLink: string;
+        try {
+          const parsedUrl = new URL(url);
+          if (!this.getAllowedOrigins().includes(parsedUrl.origin)) {
+            return { error: 'Invalid reset url', ok: false };
+          }
+          parsedUrl.hash = '';
+          resetLink = parsedUrl.toString();
+        } catch {
+          return { error: 'Invalid reset url', ok: false };
+        }
+
         const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, email));
         if (af) {
           const brandName = this.adminforth.config.customization.brandName;
 
           const resetToken = this.adminforth.auth.issueJWT({email, issuer: brandName }, 'tempResetPassword', '2h');
 
-          console.log('Sending reset tok to', resetToken);
+          const resetUrlWithToken = (() => {
+            const u = new URL(resetLink);
+            u.searchParams.set('token', resetToken);
+            return u.toString();
+          })();
 
           const emailText = `
                     Dear user,
                     To reset your ${brandName} password, click the link below:\n\n
 
-                    ${url}?token=${resetToken}\n\n
+                    ${resetUrlWithToken}\n\n
 
                     If you didn't request this, please ignore this email.\n\n
                     Link is valid for 2 hours.\n\n
@@ -149,7 +187,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
                     <body>
                       <p>Dear user,</p>
                       <p>To reset your ${brandName} password, click the link below:</p>
-                      <p><a href="${url}?token=${resetToken}">Reset password</a></p>
+                      <p><a href="${resetUrlWithToken}">Reset password</a></p>
                       <p>If you didn't request this, please ignore this email.</p>
                       <p>Link is valid for 2 hours.</p>
                       <p>Thanks,</p>
