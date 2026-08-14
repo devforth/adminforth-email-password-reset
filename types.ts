@@ -33,7 +33,7 @@ export interface PluginOptions extends PluginsCommonOptions{
   loginPageComponentOrder?: number;
 
   /**
-   * KeyValueAdapter stores used password reset tokens to prevent reuse.
+   * @deprecated - userResetTokensKeyValueAdapter is no longer used. Kept for backwards compatibility.
    */
   userResetTokensKeyValueAdapter: KeyValueAdapter;
 

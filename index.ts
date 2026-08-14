@@ -232,11 +232,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       handler: async ({ body, response }) => {
         const data = body as z.infer<typeof resetPasswordConfirmBodySchema>;
         const { token, password } = data;
-        const isUsed = await this.options.userResetTokensKeyValueAdapter.get(token);
-        if (isUsed) {
-          return { error: 'Token has already been used', ok: false };
-        }
-        await this.options.userResetTokensKeyValueAdapter.set(token, 'used', 60 * 60 * 2);
+
         const decoded = await this.adminforth.auth.verify(token, 'tempResetPassword', false);
         if (!decoded) {
           return { error: 'Invalid token', ok:false };
