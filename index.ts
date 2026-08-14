@@ -4,6 +4,7 @@ import type { PluginOptions } from './types.js';
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
 import validator from 'validator';
 import { z } from "zod";
+import { createHash } from 'crypto';
 
 const resetPasswordBodySchema = z.object({
   email: z.string(),
@@ -122,6 +123,15 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     return originList.map(o => new URL(o).origin);
   }
 
+  /**
+   * Short non-reversible digest of the user's current password hash. It is put into the reset token
+   * and re-checked on confirm, so as soon as the password is changed (by this link or any other way)
+   * every previously issued link for this user stops working, without relying on any storage.
+   */
+  passwordHashDigest(passwordHash: string | null | undefined): string {
+    return createHash('sha256').update(passwordHash || '').digest('hex').slice(0, 16);
+  }
+
   instanceUniqueRepresentation(pluginOptions: any) : string {
     // optional method to return unique string representation of plugin instance. 
     // Needed if plugin can have multiple instances on one resource 
@@ -159,7 +169,15 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         if (af) {
           const brandName = this.adminforth.config.customization.brandName;
 
-          const resetToken = this.adminforth.auth.issueJWT({email, issuer: brandName }, 'tempResetPassword', '2h');
+          const resetToken = this.adminforth.auth.issueJWT(
+            {
+              email,
+              issuer: brandName,
+              ph: this.passwordHashDigest(af[this.adminforth.config.auth.passwordHashField]),
+            },
+            'tempResetPassword',
+            '2h'
+          );
 
           const resetUrlWithToken = (() => {
             const u = new URL(resetLink);
@@ -214,12 +232,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       handler: async ({ body, response }) => {
         const data = body as z.infer<typeof resetPasswordConfirmBodySchema>;
         const { token, password } = data;
-        console.log('token', token);
-        const isUsed = await this.options.userResetTokensKeyValueAdapter.get(token);
-        if (isUsed) {
-          return { error: 'Token has already been used', ok: false };
-        }
-        await this.options.userResetTokensKeyValueAdapter.set(token, 'used', 60 * 60 * 2);
+
         const decoded = await this.adminforth.auth.verify(token, 'tempResetPassword', false);
         if (!decoded) {
           return { error: 'Invalid token', ok:false };
@@ -229,11 +242,16 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         if (af) {
           // find password hash field name
           const passwordHashFieldName = this.adminforth.config.auth.passwordHashField;
+
+          // token is bound to the password which was actual when the link was issued, so the link
+          // becomes unusable once the password was changed (e.g. by this very link before)
+          if (decoded.ph !== this.passwordHashDigest(af[passwordHashFieldName])) {
+            return { error: 'Token has already been used', ok: false };
+          }
+
           const newPasswordHash = await AdminForth.Utils.generatePasswordHash(password);
           const primaryKeyField = this.adminforth.config.resources.find(r => r.resourceId === this.authResourceId).columns.find(c => c.primaryKey);
           // update password
-
-          console.log('Updating password', primaryKeyField, af[primaryKeyField.name], passwordHashFieldName, newPasswordHash);
           await this.adminforth.resource(this.authResourceId).update(af[primaryKeyField.name], { [passwordHashFieldName]: newPasswordHash });
         }
 
