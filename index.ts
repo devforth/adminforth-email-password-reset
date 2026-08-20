@@ -132,6 +132,11 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     return createHash('sha256').update(passwordHash || '').digest('hex').slice(0, 16);
   }
 
+  normalizeEmail(email: string): string {
+    const normalize = (this.emailField as AdminForthResourceColumn & { normalize?: (value: any) => any }).normalize;
+    return normalize ? normalize(email) : email;
+  }
+
   instanceUniqueRepresentation(pluginOptions: any) : string {
     // optional method to return unique string representation of plugin instance. 
     // Needed if plugin can have multiple instances on one resource 
@@ -147,9 +152,10 @@ export default class EmailPasswordReset extends AdminForthPlugin {
       handler: async ({ body, response }) => {
         const data = body as z.infer<typeof resetPasswordBodySchema>;
         const { email, url } = data;
+        const normalizedEmail = this.normalizeEmail(email);
 
         // validate email
-        if (!email || typeof email !== 'string' || !validator.isEmail(email)) {
+        if (!normalizedEmail || typeof normalizedEmail !== 'string' || !validator.isEmail(normalizedEmail)) {
           return { error: 'Invalid email address', ok: false };
         }
 
@@ -165,13 +171,13 @@ export default class EmailPasswordReset extends AdminForthPlugin {
           return { error: 'Invalid reset url', ok: false };
         }
 
-        const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, email));
+        const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, normalizedEmail));
         if (af) {
           const brandName = this.adminforth.config.customization.brandName;
 
           const resetToken = this.adminforth.auth.issueJWT(
             {
-              email,
+              email: normalizedEmail,
               issuer: brandName,
               ph: this.passwordHashDigest(af[this.adminforth.config.auth.passwordHashField]),
             },
@@ -217,7 +223,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
                   `;
           const emailSubject = `Password reset request at ${brandName}`;
           // send email with AWS SES this.options.providerOptions.AWS_SES
-          this.options.adapter.sendEmail(this.options.sendFrom, email, emailText, emailHtml, emailSubject);
+          this.options.adapter.sendEmail(this.options.sendFrom, normalizedEmail, emailText, emailHtml, emailSubject);
         }
 
         return { ok: true };
@@ -238,7 +244,8 @@ export default class EmailPasswordReset extends AdminForthPlugin {
           return { error: 'Invalid token', ok:false };
         }
 
-        const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, decoded.email));
+        const normalizedEmail = this.normalizeEmail(decoded.email);
+        const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, normalizedEmail));
         if (af) {
           // find password hash field name
           const passwordHashFieldName = this.adminforth.config.auth.passwordHashField;
