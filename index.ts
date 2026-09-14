@@ -19,6 +19,7 @@ const resetPasswordConfirmBodySchema = z.object({
 export default class EmailPasswordReset extends AdminForthPlugin {
   options: PluginOptions;
   emailField: AdminForthResourceColumn;
+  passwordField: AdminForthResourceColumn;
   authResourceId: string;
   adminforth: IAdminForth;
 
@@ -60,6 +61,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         ${similar ? `Did you mean ${similar}?` : ''}
       `);
     }
+    this.passwordField = passwordField;
 
     if (!this.options.adapter) {
       throw new Error('Adapter is required. Please provide a valid adapter in the plugin options.');
@@ -130,6 +132,24 @@ export default class EmailPasswordReset extends AdminForthPlugin {
    */
   passwordHashDigest(passwordHash: string | null | undefined): string {
     return createHash('sha256').update(passwordHash || '').digest('hex').slice(0, 16);
+  }
+
+  /**
+   * Same constraints which reset form checks on the frontend. Repeated here because the endpoint can be
+   * called directly (e.g. from Postman), bypassing the form.
+   */
+  validatePassword(password: string): string | null {
+    if (!password) {
+      return 'Password is required';
+    }
+    const { minLength, maxLength, validation } = this.passwordField;
+    if (minLength !== undefined && password.length < minLength) {
+      return `Password must be at least ${minLength} characters long`;
+    }
+    if (maxLength !== undefined && password.length > maxLength) {
+      return `Password must be at most ${maxLength} characters long`;
+    }
+    return AdminForth.Utils.applyRegexValidation(password, validation) || null;
   }
 
   normalizeEmail(email: string): string {
@@ -242,6 +262,11 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         const decoded = await this.adminforth.auth.verify(token, 'tempResetPassword', false);
         if (!decoded) {
           return { error: 'Invalid token', ok:false };
+        }
+
+        const passwordError = this.validatePassword(password);
+        if (passwordError) {
+          return { error: passwordError, ok: false };
         }
 
         const normalizedEmail = this.normalizeEmail(decoded.email);
