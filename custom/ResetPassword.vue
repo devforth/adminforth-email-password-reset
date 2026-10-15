@@ -7,7 +7,7 @@
       'background-blend-mode': coreStore.config?.removeBackgroundBlendMode ? 'normal' : 'darken'
     }: {}"
   >
-    
+
     <img v-if="coreStore.config?.loginBackgroundImage && backgroundPosition !== 'over'"
       :src="loadFile(coreStore.config?.loginBackgroundImage)"
       class="position-absolute top-0 left-0 h-screen object-cover w-0"
@@ -22,132 +22,92 @@
     />
 
     <!-- Main modal -->
-    <div id="authentication-modal" tabindex="-1" 
+    <div id="authentication-modal" tabindex="-1"
       class="af-reset-password-modal overflow-y-auto flex flex-grow
       overflow-x-hidden z-50 min-w-[350px]  justify-center items-center md:inset-0 h-[calc(100%-1rem)] max-h-full">
-        <div class="relative p-4 w-full max-h-full max-w-[400px]">
-            <!-- Modal content -->
-            <div class="af-login-popup relative bg-white rounded-lg shadow dark:bg-gray-700 dark:shadow-black" >
-                <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                  <component  
-                    v-if="route.meta.pageInjection?.panelHeader" 
-                    :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" 
-                  />
-                  <h3 v-else class="text-xl font-semibold text-gray-900 dark:text-white">
-                    {{$t('Reset your password on')}} {{ coreStore.config?.brandName }}
-                  </h3>
-                </div>
-                <!-- Modal body -->
-                <div class="p-4 md:p-5">
-                  <form v-if="enteringNew" class="space-y-4" role="alert" @submit.prevent>
-                    <div class="relative">
-                      <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('New password')}}</label>
-                      <Input 
-                        :type="unmasked ? 'text' : 'password'"
-                        name="password" id="password"
-                        autocomplete="new-password"
-                        v-model="password"
-                        @keydown.enter="passwordConfirmationInput.focus()"
-                        class="w-full"
-                        :placeholder="$t('New password')" required
-                      />
-                      
-                      <button
-                        type="button"
-                        @click="unmasked = !unmasked"
-                        class="h-6 absolute inset-y-2 top-9 right-1 flex items-center pr-2 z-index-100 focus:outline-none"
-                      >
-                        <IconEyeSolid class="w-6 h-6 text-gray-400"  v-if="!unmasked" />
-                        <IconEyeSlashSolid class="w-6 h-6 text-gray-400" v-else />
-                      </button>
-                    </div>
+      <div class="relative flex w-full max-h-full justify-center p-4">
+        <AuthCard
+          class="af-login-popup"
+          :title="header.title"
+          :subtitle="header.subtitle"
+          :error="validationError || error"
+        >
+          <template #icon>
+            <IconEnvelopeOutline v-if="requestSent" class="w-6 h-6" />
+            <IconLockOutline v-else class="w-6 h-6" />
+          </template>
+          <template v-if="route.meta.pageInjection?.panelHeader" #title>
+            <component :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" />
+          </template>
 
-                    <div class="relative">
-                      <label for="password_confirmation" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('Confirm new password')}}</label>
-                      <Input 
-                        :type="unmasked ? 'text' : 'password'"
-                        name="password_confirmation" id="password_confirmation" 
-                        autocomplete="new-password"
-                        v-model="passwordConfirmation"
-                        class="w-full" 
-                        :placeholder="$t('Confirm new password')" required 
-                      />
-                      <button
-                        type="button"
-                        @click="unmasked = !unmasked"
-                        class="h-6 absolute inset-y-2 top-9 right-1 flex items-center pr-2 z-index-100 focus:outline-none"
-                      >
-                        <IconEyeSolid class="w-6 h-6 text-gray-400"  v-if="!unmasked" />
-                        <IconEyeSlashSolid class="w-6 h-6 text-gray-400" v-else />
-                      </button>
-                    </div>
+          <template v-if="enteringNew">
+            <PasswordField
+              v-model="password"
+              id="password"
+              :label="$t('New password')"
+              :placeholder="$t('New password')"
+              :unmasked="unmasked"
+              :invalid="Boolean(validationError)"
+              @toggle="unmasked = !unmasked"
+              @keydown.enter="passwordConfirmationInput!.focus()"
+            />
+            <PasswordField
+              ref="passwordConfirmationInput"
+              v-model="passwordConfirmation"
+              id="password_confirmation"
+              :label="$t('Confirm new password')"
+              :placeholder="$t('Confirm new password')"
+              :unmasked="unmasked"
+              :invalid="Boolean(validationError)"
+              @toggle="unmasked = !unmasked"
+              @keydown.enter="setNewPassword"
+            />
+          </template>
 
-                    <div v-if="validationError || error" class="af-alert-error flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-                      <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                      </svg>
-                      <span class="sr-only">{{$t('Info')}}</span>
-                      <div>
-                        {{ validationError || error }}
-                      </div>
-                    </div>
+          <p v-else-if="requestSent" role="status" class="af-alert-success flex items-start gap-2.5 rounded-[10px] border border-green-200 bg-green-50 px-3.5 py-3 text-[13px] leading-[19px] text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+            <IconCheckCircleOutline class="w-[18px] h-[18px] shrink-0" />
+            {{ $t('If an account with {email} exists, we sent it a link to reset the password.', { email: sentToEmail }) }}
+          </p>
 
-                    <Button
-                      :disabled="inProgress || (validationRunning && validationError)"
-                      @click="setNewPassword"
-                      class="w-full">
-                      <svg v-if="inProgress"
-                        aria-hidden="true" class="w-4 h-4 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874
-// 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/></svg>
-                        {{$t('Set new password')}}
-                    </Button>
-                  </form>
-<!-- END of set new paasord -->
-                  <div v-if="!enteringNew && requestSent" class="af-alert-success flex items-center justify-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-green-800 dark:text-green-400" role="alert">
-                    {{$t('If user exists, then request was sent. Please check your email at')}} {{ sentToEmail }} {{$t('to reset your password.')}}
-                  </div>
+          <div v-else>
+            <label for="email" class="mb-2 block text-[13px] font-medium text-gray-700 dark:text-gray-300">{{ $t('Your email') }}</label>
+            <input
+              v-model="emailInput"
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="name@company.com"
+              required
+              class="h-11 w-full rounded-[10px] border-[1.5px] border-gray-300 bg-gray-50 px-3.5 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:border-lightPrimary focus:ring-4 focus:ring-lightPrimary/25 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-darkPrimary dark:focus:ring-darkPrimary/25"
+              @keydown.enter="reset()"
+            />
+            <component
+              v-if="route.meta.pageInjection?.underInputs"
+              :is="getCustomComponent({file: route.meta.pageInjection?.underInputs})"
+            />
+          </div>
 
-                  <form v-if="!enteringNew && !requestSent" class="space-y-4" @submit.prevent>
-                    <div>
-                      <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{$t('Your email')}}</label>
-                      <Input type="email" name="email" id="email" 
-                        @keydown.enter="reset()"
-                        v-model="emailInput"
-                        class="w-full" 
-                        placeholder="name@company.com" 
-                        required
-                      />
-                      <component  
-                        v-if="route.meta.pageInjection?.underInputs" 
-                        :is="getCustomComponent({file: route.meta.pageInjection?.underInputs})" 
-                      />
-                    </div>
-                  
-                    <div v-if="error" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-                      <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                      </svg>
-                      <span class="sr-only">{{$t('Info')}}</span>
-                      <div>
-                        {{ error }}
-                      </div>
-                    </div>
-                    <Button 
-                      :loader="inProgress"
-                      :disabled="inProgress"
-                      @click="reset"
-                      class="w-full">
-                      {{$t('Reset Password')}}
-                    </Button>
-                    <p class="text-gray-500 dark:text-gray-400 font-sm text-right mt-3">
-                      <Link to="/login">{{$t('Back to login')}}</Link>
-                    </p>
-                  </form>
-                </div>
-            </div>
-        </div>
-    </div> 
+          <template #footer>
+            <Button
+              v-if="enteringNew"
+              :loader="inProgress"
+              :disabled="inProgress || (validationRunning && validationError)"
+              class="whitespace-nowrap"
+              @click="setNewPassword"
+            >
+              {{ $t('Set new password') }}
+            </Button>
+            <template v-else>
+              <LinkButton to="/login" variant="secondary" class="whitespace-nowrap">{{ $t('Back to login') }}</LinkButton>
+              <Button v-if="!requestSent" :loader="inProgress" :disabled="inProgress" class="whitespace-nowrap" @click="reset">
+                {{ $t('Send reset link') }}
+              </Button>
+            </template>
+          </template>
+        </AuthCard>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -156,13 +116,18 @@
 <script setup lang="ts">
 
 import { onMounted, ref, computed, Ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useCoreStore } from '@/stores/core';
 import { callAdminForthApi, loadFile, applyRegexValidation } from '@/utils';
 import { useRoute, useRouter } from 'vue-router';
-import { IconEyeSolid, IconEyeSlashSolid } from '@iconify-prerendered/vue-flowbite';
-import { Link, Button, Input } from '@/afcl';
+import { IconCheckCircleOutline, IconEnvelopeOutline, IconLockOutline } from '@iconify-prerendered/vue-flowbite';
+import { Button, LinkButton } from '@/afcl';
 import adminforth from '@/adminforth';
 import { getCustomComponent } from '@/utils';
+import AuthCard from './AuthCard.vue';
+import PasswordField from './PasswordField.vue';
+
+const { t } = useI18n();
 
 const inProgress = ref(false);
 
@@ -170,6 +135,7 @@ const coreStore = useCoreStore();
 const requestSent = ref(false);
 
 const emailInput = ref(null);
+const passwordConfirmationInput = ref<InstanceType<typeof PasswordField> | null>(null);
 const password = ref("");
 const passwordConfirmation = ref("");
 const unmasked = ref(false);
@@ -220,6 +186,17 @@ const error = ref(null);
 // if token query param is present, we are entering new password
 const enteringNew = computed(() => route.query.token);
 
+const header = computed(() => {
+  const brand = coreStore.config?.brandName;
+  if (enteringNew.value) {
+    return { title: t('Set a new password'), subtitle: t('Choose a new password for your {brand} account', { brand }) };
+  }
+  if (requestSent.value) {
+    return { title: t('Check your email'), subtitle: t('The reset link is on its way') };
+  }
+  return { title: t('Reset your password'), subtitle: t('Enter the email of your {brand} account', { brand }) };
+});
+
 const backgroundPosition = computed(() => {
   return coreStore.config?.loginBackgroundPosition || '1/2';
 });
@@ -261,7 +238,7 @@ async function reset() {
 
 async function setNewPassword() {
   error.value = null;
-  
+
   if (checkPassowrd()) {
     validationRunning.value = true;
     return;
