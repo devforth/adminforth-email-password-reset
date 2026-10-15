@@ -64,13 +64,13 @@
             />
           </template>
 
-          <p v-else-if="requestSent" role="status" class="af-alert-success flex items-start gap-2.5 rounded-[10px] border border-green-200 bg-green-50 px-3.5 py-3 text-[13px] leading-[19px] text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
-            <IconCheckCircleOutline class="w-[18px] h-[18px] shrink-0" />
+          <p v-else-if="requestSent" role="status" class="af-alert-success flex items-start gap-2.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-3 text-sm leading-5 text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+            <IconCheckCircleOutline class="w-5 h-5 shrink-0" />
             {{ $t('If an account with {email} exists, we sent it a link to reset the password.', { email: sentToEmail }) }}
           </p>
 
           <div v-else>
-            <label for="email" class="mb-2 block text-[13px] font-medium text-gray-700 dark:text-gray-300">{{ $t('Your email') }}</label>
+            <label for="email" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('Your email') }}</label>
             <input
               v-model="emailInput"
               id="email"
@@ -79,7 +79,7 @@
               autocomplete="email"
               placeholder="name@company.com"
               required
-              class="h-11 w-full rounded-[10px] border-[1.5px] border-gray-300 bg-gray-50 px-3.5 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:border-lightPrimary focus:ring-4 focus:ring-lightPrimary/25 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-darkPrimary dark:focus:ring-darkPrimary/25"
+              class="h-11 w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3.5 text-base text-gray-900 placeholder-gray-400 outline-none focus:border-lightPrimary focus:ring-4 focus:ring-lightPrimary/25 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-darkPrimary dark:focus:ring-darkPrimary/25"
               @keydown.enter="reset()"
             />
             <component

@@ -1,6 +1,6 @@
 <template>
   <div class="af-password-field">
-    <label :for="id" class="mb-2 block text-[13px] font-medium text-gray-700 dark:text-gray-300">{{ label }}</label>
+    <label :for="id" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ label }}</label>
     <div class="relative">
       <input
         ref="input"
@@ -11,7 +11,7 @@
         :placeholder="placeholder"
         autocomplete="new-password"
         required
-        class="h-11 w-full rounded-[10px] border-[1.5px] bg-gray-50 pl-3.5 pr-12 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:ring-4 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        class="h-11 w-full rounded-lg border-2 bg-gray-50 pl-3.5 pr-12 text-base text-gray-900 placeholder-gray-400 outline-none focus:ring-4 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
         :class="invalid
           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/25 dark:border-red-400 dark:focus:border-red-400'
           : 'border-gray-300 focus:border-lightPrimary focus:ring-lightPrimary/25 dark:border-gray-600 dark:focus:border-darkPrimary dark:focus:ring-darkPrimary/25'"
