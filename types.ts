@@ -35,7 +35,7 @@ export interface PluginOptions extends PluginsCommonOptions{
   /**
    * @deprecated - userResetTokensKeyValueAdapter is no longer used. Kept for backwards compatibility.
    */
-  userResetTokensKeyValueAdapter: KeyValueAdapter;
+  userResetTokensKeyValueAdapter?: KeyValueAdapter;
 
   /**
    * The origin(s) (scheme + host + optional port) of the admin panel that are
