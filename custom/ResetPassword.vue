@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-800 relative w-screen h-screen"
+  <div class="relative flex items-center justify-center min-h-screen bg-lightHtml dark:bg-darkHtml w-screen h-screen"
     :style="coreStore.config?.loginBackgroundImage && backgroundPosition === 'over' ? {
       'background-image': 'url(' + loadFile(coreStore.config?.loginBackgroundImage) + ')',
       'background-size': 'cover',
@@ -26,61 +26,72 @@
       class="af-reset-password-modal overflow-y-auto flex flex-grow
       overflow-x-hidden z-50 min-w-[350px]  justify-center items-center md:inset-0 h-[calc(100%-1rem)] max-h-full">
       <div class="relative flex w-full max-h-full justify-center p-4">
-        <AuthCard
-          class="af-login-popup"
+        <DialogPanel
+          class="af-login-popup af-auth-card"
           :title="header.title"
           :subtitle="header.subtitle"
           :error="validationError || error"
+          :classes="AUTH_CARD_CLASSES"
         >
           <template #icon>
-            <IconEnvelopeOutline v-if="requestSent" class="w-6 h-6" />
-            <IconLockOutline v-else class="w-6 h-6" />
+            <IconMail v-if="requestSent" />
+            <IconLock v-else />
           </template>
           <template v-if="route.meta.pageInjection?.panelHeader" #title>
             <component :is="getCustomComponent({file: route.meta.pageInjection?.panelHeader})" />
           </template>
 
           <template v-if="enteringNew">
-            <PasswordField
-              v-model="password"
-              id="password"
-              :label="$t('New password')"
-              :placeholder="$t('New password')"
-              :unmasked="unmasked"
-              :invalid="Boolean(validationError)"
-              @toggle="unmasked = !unmasked"
-              @keydown.enter="passwordConfirmationInput!.focus()"
-            />
-            <PasswordField
-              ref="passwordConfirmationInput"
-              v-model="passwordConfirmation"
-              id="password_confirmation"
-              :label="$t('Confirm new password')"
-              :placeholder="$t('Confirm new password')"
-              :unmasked="unmasked"
-              :invalid="Boolean(validationError)"
-              @toggle="unmasked = !unmasked"
-              @keydown.enter="setNewPassword"
-            />
+            <!-- enter is handled on the wrapper: Input spreads attrs on both its root and the input -->
+            <div class="af-password-field" @keydown.enter="passwordConfirmationInput!.focus()">
+              <label for="password" class="block mb-2 text-sm font-medium text-lightLoginViewTextColor dark:text-darkLoginViewTextColor">{{ $t('New password') }}</label>
+              <Input
+                v-model="password"
+                id="password"
+                name="password"
+                type="password"
+                passwordToggle
+                autocomplete="new-password"
+                :placeholder="$t('New password')"
+                :invalid="Boolean(validationError)"
+                fullWidth
+                required
+              />
+            </div>
+            <div class="af-password-field" @keydown.enter="setNewPassword">
+              <label for="password_confirmation" class="block mb-2 text-sm font-medium text-lightLoginViewTextColor dark:text-darkLoginViewTextColor">{{ $t('Confirm new password') }}</label>
+              <Input
+                ref="passwordConfirmationInput"
+                v-model="passwordConfirmation"
+                id="password_confirmation"
+                name="password_confirmation"
+                type="password"
+                passwordToggle
+                autocomplete="new-password"
+                :placeholder="$t('Confirm new password')"
+                :invalid="Boolean(validationError)"
+                fullWidth
+                required
+              />
+            </div>
           </template>
 
-          <p v-else-if="requestSent" role="status" class="af-alert-success flex items-start gap-2.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-3 text-sm leading-5 text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
-            <IconCheckCircleOutline class="w-5 h-5 shrink-0" />
+          <p v-else-if="requestSent" role="status" class="af-alert-success flex items-start gap-2.5 rounded-lg border border-lightSuccessBorder bg-lightSuccessSoft px-3.5 py-3 text-sm leading-5 text-lightSuccess dark:border-darkSuccessBorder dark:bg-darkSuccessSoft dark:text-darkSuccess">
+            <IconCircleCheck class="w-5 h-5 shrink-0" />
             {{ $t('If an account with {email} exists, we sent it a link to reset the password.', { email: sentToEmail }) }}
           </p>
 
-          <div v-else>
-            <label for="email" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $t('Your email') }}</label>
-            <input
+          <div v-else @keydown.enter="reset()">
+            <label for="email" class="block mb-2 text-sm font-medium text-lightLoginViewTextColor dark:text-darkLoginViewTextColor">{{ $t('Your email') }}</label>
+            <Input
               v-model="emailInput"
               id="email"
               name="email"
               type="email"
               autocomplete="email"
               placeholder="name@company.com"
+              fullWidth
               required
-              class="h-11 w-full rounded-lg border-2 border-gray-300 bg-gray-50 px-3.5 text-base text-gray-900 placeholder-gray-400 outline-none focus:border-lightPrimary focus:ring-4 focus:ring-lightPrimary/25 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-darkPrimary dark:focus:ring-darkPrimary/25"
-              @keydown.enter="reset()"
             />
             <component
               v-if="route.meta.pageInjection?.underInputs"
@@ -105,7 +116,7 @@
               </Button>
             </template>
           </template>
-        </AuthCard>
+        </DialogPanel>
       </div>
     </div>
 
@@ -120,12 +131,10 @@ import { useI18n } from 'vue-i18n';
 import { useCoreStore } from '@/stores/core';
 import { callAdminForthApi, loadFile, applyRegexValidation } from '@/utils';
 import { useRoute, useRouter } from 'vue-router';
-import { IconCheckCircleOutline, IconEnvelopeOutline, IconLockOutline } from '@iconify-prerendered/vue-flowbite';
-import { Button, LinkButton } from '@/afcl';
+import { IconCircleCheck, IconLock, IconMail } from '@iconify-prerendered/vue-lucide';
+import { Button, DialogPanel, Input, LinkButton } from '@/afcl';
 import adminforth from '@/adminforth';
 import { getCustomComponent } from '@/utils';
-import AuthCard from './AuthCard.vue';
-import PasswordField from './PasswordField.vue';
 
 const { t } = useI18n();
 
@@ -135,10 +144,20 @@ const coreStore = useCoreStore();
 const requestSent = ref(false);
 
 const emailInput = ref(null);
-const passwordConfirmationInput = ref<InstanceType<typeof PasswordField> | null>(null);
+// class names apps restyle the card by, kept from the former AuthCard
+const AUTH_CARD_CLASSES = {
+  header: 'af-auth-card-header',
+  icon: 'af-auth-card-icon',
+  titleWrap: 'af-auth-card-title-wrap',
+  title: 'af-auth-card-title',
+  subtitle: 'af-auth-card-subtitle',
+  body: 'af-auth-card-body',
+  error: 'af-auth-card-error',
+  footer: 'af-auth-card-footer',
+};
+const passwordConfirmationInput = ref<InstanceType<typeof Input> | null>(null);
 const password = ref("");
 const passwordConfirmation = ref("");
-const unmasked = ref(false);
 const sentToEmail: Ref<string> = ref('');
 
 const route = useRoute();

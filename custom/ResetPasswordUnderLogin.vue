@@ -1,5 +1,5 @@
 <template>
-  <p class="text-gray-500 dark:text-gray-400 font-sm text-left mt-3">
+  <p class="af-reset-password-link text-sm text-left mt-3 text-lightLoginViewSubTextColor dark:text-darkLoginViewSubTextColor">
     {{$t('Forgot password?')}} 
     <Link to="/reset-password">
       {{$t('reset it')}}
