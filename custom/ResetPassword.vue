@@ -225,7 +225,7 @@ const passwordField = computed(
 )
 
 onMounted(async () => {
-  await coreStore.getPublicConfig();
+  await coreStore.fetchConfig({ redirectToLoginIfNotLoggedIn: false });
 });
 
 async function reset() {
