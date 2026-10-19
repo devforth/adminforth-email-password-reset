@@ -167,6 +167,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password`,
+      agent: { hiddenFromAgents: true },
       noAuth: true,
       request_schema: resetPasswordBodySchema,
       handler: async ({ body, response }) => {
@@ -253,6 +254,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/reset-password-confirm`,
+      agent: { hiddenFromAgents: true },
       noAuth: true,
       request_schema: resetPasswordConfirmBodySchema,
       handler: async ({ body, response }) => {
