@@ -18,10 +18,11 @@ const resetPasswordConfirmBodySchema = z.object({
 
 export default class EmailPasswordReset extends AdminForthPlugin {
   options: PluginOptions;
-  emailField: AdminForthResourceColumn;
-  passwordField: AdminForthResourceColumn;
-  authResourceId: string;
-  adminforth: IAdminForth;
+  emailField!: AdminForthResourceColumn;
+  passwordField!: AdminForthResourceColumn;
+  authResourceId!: string;
+  passwordHashField!: string;
+  primaryKeyColumn!: AdminForthResourceColumn;
 
   constructor(options: PluginOptions) {
     super(options, import.meta.url);
@@ -33,11 +34,14 @@ export default class EmailPasswordReset extends AdminForthPlugin {
     super.modifyResourceConfig(adminforth, resourceConfig);
 
     // find field with name resourceConfig.emailField in adminforth.auth.usersResourceId and show error if it doesn't exist
-    const authResource = adminforth.config.resources.find(r => r.resourceId === adminforth.config.auth.usersResourceId);
+    const { usersResourceId, passwordHashField } = adminforth.config.auth!;
+    const authResource = adminforth.config.resources.find(r => r.resourceId === usersResourceId);
     if (!authResource) {
-      throw new Error(`Resource with id config.auth.usersResourceId=${adminforth.config.auth.usersResourceId} not found`);
+      throw new Error(`Resource with id config.auth.usersResourceId=${usersResourceId} not found`);
     }
     this.authResourceId = authResource.resourceId;
+    this.passwordHashField = passwordHashField;
+    this.primaryKeyColumn = authResource.columns.find(c => c.primaryKey)!;
 
     const emailField = authResource.columns.find(f => f.name === this.options.emailField);
     if (!emailField) {
@@ -200,7 +204,7 @@ export default class EmailPasswordReset extends AdminForthPlugin {
             {
               email: normalizedEmail,
               issuer: brandName,
-              ph: this.passwordHashDigest(af[this.adminforth.config.auth.passwordHashField]),
+              ph: this.passwordHashDigest(af[this.passwordHashField]),
             },
             'tempResetPassword',
             '2h'
@@ -274,19 +278,15 @@ export default class EmailPasswordReset extends AdminForthPlugin {
         const normalizedEmail = this.normalizeEmail(decoded.email);
         const af = await this.adminforth.resource(this.authResourceId).get(Filters.EQ(this.emailField.name, normalizedEmail));
         if (af) {
-          // find password hash field name
-          const passwordHashFieldName = this.adminforth.config.auth.passwordHashField;
-
           // token is bound to the password which was actual when the link was issued, so the link
           // becomes unusable once the password was changed (e.g. by this very link before)
-          if (decoded.ph !== this.passwordHashDigest(af[passwordHashFieldName])) {
+          if (decoded.ph !== this.passwordHashDigest(af[this.passwordHashField])) {
             return { error: 'Token has already been used', ok: false };
           }
 
           const newPasswordHash = await AdminForth.Utils.generatePasswordHash(password);
-          const primaryKeyField = this.adminforth.config.resources.find(r => r.resourceId === this.authResourceId).columns.find(c => c.primaryKey);
           // update password
-          await this.adminforth.resource(this.authResourceId).update(af[primaryKeyField.name], { [passwordHashFieldName]: newPasswordHash });
+          await this.adminforth.resource(this.authResourceId).update(af[this.primaryKeyColumn.name], { [this.passwordHashField]: newPasswordHash });
         }
 
         return { ok: true };
